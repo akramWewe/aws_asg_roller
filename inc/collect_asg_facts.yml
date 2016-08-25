@@ -1,0 +1,17 @@
+---
+- name: Collecting infos about ASG to manage
+  shell: >
+    aws autoscaling describe-auto-scaling-groups
+    --auto-scaling-group-names={{ target_asg_name }}
+    --region={{ aws_region }}
+  register: asg_search_raw
+
+- name: Parsing JSON response
+  set_fact:
+    target_asg: "{{ (asg_search_raw.stdout|from_json)['AutoScalingGroups'][0] }}"
+
+- name: Computing facts of temporary new ASG size
+  set_fact:
+    tmp_min_size: "{{ (target_asg.MinSize|int) + (batch_size|int) }}"
+    tmp_max_size: "{{ (target_asg.MaxSize|int) + (batch_size|int) }}"
+    tmp_desired_capacity: "{{ (target_asg.DesiredCapacity|int) + (batch_size|int) }}"

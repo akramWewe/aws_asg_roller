@@ -1,0 +1,78 @@
+---
+- hosts: localhost
+  become: no
+
+  vars:
+    batch_size: 1
+    termination_policies:
+      - "OldestInstance"
+      - "OldestLaunchConfiguration"
+
+  pre_tasks:
+  
+  # --- Mandatory vars check
+    - fail:
+        msg: "Supply var 'target_asg_name' => the targeted autoscaling group name"
+      when: target_asg_name is not defined
+
+    - fail:
+        msg: "Supply var 'aws_region' => region of the targeted autoscaling group"
+      when: aws_region is not defined
+
+  # --- Information gathering
+    - include: "inc/collect_asg_facts.yml"
+
+    - include: "inc/collect_elb_facts.yml"
+      when: "{{ target_asg.HealthCheckType == 'ELB' }}"
+
+    - include: "inc/collect_ec2_facts.yml"
+      when: "{{ target_asg.HealthCheckType == 'EC2' }}"
+
+    - debug:
+        msg: "Will wait {{ wait_for_healthiness }}s for new instances to become healthy"
+
+  tasks:
+    - name: Inflating ASG
+      ec2_asg:
+        region: "{{ aws_region }}"
+        name: "{{ target_asg.AutoScalingGroupName }}"
+        load_balancers: "{{ target_asg.LoadBalancerNames }}"
+        availability_zones: "{{ target_asg.AvailabilityZones | join(',')}}"
+        launch_config_name: "{{ target_asg.LaunchConfigurationName }}"
+        health_check_period: "{{ target_asg.HealthCheckGracePeriod }}"
+        health_check_type: "{{ target_asg.HealthCheckType }}"
+        wait_timeout: "{{ wait_for_healthiness }}"
+        min_size: "{{ tmp_min_size }}"
+        max_size: "{{ tmp_max_size }}"
+        desired_capacity: "{{ tmp_desired_capacity }}"
+
+    - name: Rolling ASG
+      ec2_asg:
+        region: "{{ aws_region }}"
+        name: "{{ target_asg.AutoScalingGroupName }}"
+        load_balancers: "{{ target_asg.LoadBalancerNames }}"
+        availability_zones: "{{ target_asg.AvailabilityZones | join(',')}}"
+        launch_config_name: "{{ target_asg.LaunchConfigurationName }}"
+        health_check_period: "{{ target_asg.HealthCheckGracePeriod }}"
+        health_check_type: "{{ target_asg.HealthCheckType }}"
+        wait_timeout: "{{ wait_for_healthiness }}"
+        min_size: "{{ tmp_min_size }}"
+        max_size: "{{ tmp_max_size }}"
+        desired_capacity: "{{ tmp_desired_capacity }}"
+        termination_policies: "{{ termination_policies }}"
+        replace_all_instances: yes
+        replace_batch_size: "{{ batch_size }}"
+
+    - name: Deflating ASG
+      ec2_asg:
+        region: "{{ aws_region }}"
+        name: "{{ target_asg.AutoScalingGroupName }}"
+        load_balancers: "{{ target_asg.LoadBalancerNames }}"
+        availability_zones: "{{ target_asg.AvailabilityZones | join(',')}}"
+        launch_config_name: "{{ target_asg.LaunchConfigurationName }}"
+        health_check_period: "{{ target_asg.HealthCheckGracePeriod }}"
+        health_check_type: "{{ target_asg.HealthCheckType }}"
+        min_size: "{{ target_asg.MinSize }}"
+        max_size: "{{ target_asg.MaxSize }}"
+        desired_capacity: "{{ target_asg. DesiredCapacity }}"
+        termination_policies: "{{ termination_policies }}"
