@@ -9,7 +9,7 @@
       - "OldestLaunchConfiguration"
 
   pre_tasks:
-  
+
   # --- Mandatory vars check
     - fail:
         msg: "Supply var 'target_asg_name' => the targeted autoscaling group name"
