@@ -10,13 +10,16 @@
   set_fact:
     asg_elbs: "{{ (elb_search_raw.stdout|from_json)['LoadBalancerDescriptions'] }}"
 
-- set_fact:
+- name: Extracting health checks data
+  set_fact:
     elb_healthchecks: "{{ asg_elbs|map(attribute='HealthCheck')|list }}"
     elb_healthiness_detection_delays: []
 
-- set_fact:
+- name: Computing optimal waiting time for each ELB
+  set_fact:
     elb_healthiness_detection_delays: "{{ elb_healthiness_detection_delays + [ item.Interval * item.HealthyThreshold ] }}"
   with_items: "{{ elb_healthchecks }}"
 
-- set_fact:
+- name: Taking biggest waiting time as reference
+  set_fact:
     wait_for_healthiness: "{{ 5 + target_asg.HealthCheckGracePeriod + elb_healthiness_detection_delays|max }}"

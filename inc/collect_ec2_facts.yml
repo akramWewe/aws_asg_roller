@@ -1,1 +1,4 @@
 ---
+- name: Computing optimal waiting time for EC2
+  set_fact:
+    wait_for_healthiness: "{{ 5 + target_asg.HealthCheckGracePeriod }}"

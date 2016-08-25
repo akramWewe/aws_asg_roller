@@ -76,3 +76,4 @@
         max_size: "{{ target_asg.MaxSize }}"
         desired_capacity: "{{ target_asg. DesiredCapacity }}"
         termination_policies: "{{ termination_policies }}"
+        wait_for_instances: no
