@@ -5,7 +5,6 @@
   vars:
     batch_size: 1
     termination_policies:
-      - "OldestInstance"
       - "OldestLaunchConfiguration"
 
   pre_tasks:
