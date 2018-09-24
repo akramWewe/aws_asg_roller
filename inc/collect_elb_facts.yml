@@ -1,25 +1,17 @@
 ---
-- name: Collecting infos about associated load balancers
+- name: Collecting infos about ASG to manage
   shell: >
-    aws elb describe-load-balancers
-    --load-balancer-names {{ target_asg.LoadBalancerNames|join(' ') }}
-    --region={{ aws_region }}
-  register: elb_search_raw
+    aws autoscaling describe-auto-scaling-groups
+    --auto-scaling-group-names {{ target_asg_name }}
+    --region {{ aws_region }}
+  register: asg_search_raw
 
 - name: Parsing JSON response
   set_fact:
-    asg_elbs: "{{ (elb_search_raw.stdout|from_json)['LoadBalancerDescriptions'] }}"
+    target_asg: "{{ (asg_search_raw.stdout|from_json)['AutoScalingGroups'][0] }}"
 
-- name: Extracting health checks data
+- name: Computing facts of temporary new ASG size
   set_fact:
-    elb_healthchecks: "{{ asg_elbs|map(attribute='HealthCheck')|list }}"
-    elb_healthiness_detection_delays: []
-
-- name: Computing optimal waiting time for each ELB
-  set_fact:
-    elb_healthiness_detection_delays: "{{ elb_healthiness_detection_delays + [ item.Interval * item.HealthyThreshold ] }}"
-  with_items: "{{ elb_healthchecks }}"
-
-- name: Taking biggest waiting time as reference
-  set_fact:
-    wait_for_healthiness: "{{ 5 + target_asg.HealthCheckGracePeriod + elb_healthiness_detection_delays|max }}"
+    tmp_min_size: "{{ (target_asg.MinSize|int) + (batch_size|int) }}"
+    tmp_max_size: "{{ (target_asg.MaxSize|int) + (batch_size|int) }}"
+    tmp_desired_capacity: "{{ (target_asg.DesiredCapacity|int) + (batch_size|int) }}"
