@@ -2,8 +2,8 @@
 - name: Collecting infos about ASG to manage
   shell: >
     aws autoscaling describe-auto-scaling-groups
-    --auto-scaling-group-names={{ target_asg_name }}
-    --region={{ aws_region }}
+    --auto-scaling-group-names {{ target_asg_name }}
+    --region {{ aws_region }}
   register: asg_search_raw
 
 - name: Parsing JSON response
