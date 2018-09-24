@@ -44,6 +44,7 @@
         min_size: "{{ tmp_min_size }}"
         max_size: "{{ tmp_max_size }}"
         desired_capacity: "{{ tmp_desired_capacity }}"
+        default_cooldown: "{{ target_asg.DefaultCooldown }}"
 
     - name: Rolling ASG
       ec2_asg:
@@ -58,6 +59,7 @@
         min_size: "{{ tmp_min_size }}"
         max_size: "{{ tmp_max_size }}"
         desired_capacity: "{{ tmp_desired_capacity }}"
+        default_cooldown: "{{ target_asg.DefaultCooldown }}"
         termination_policies: "{{ termination_policies }}"
         replace_all_instances: yes
         replace_batch_size: "{{ batch_size }}"
@@ -73,6 +75,7 @@
         health_check_type: "{{ target_asg.HealthCheckType }}"
         min_size: "{{ target_asg.MinSize }}"
         max_size: "{{ target_asg.MaxSize }}"
-        desired_capacity: "{{ target_asg. DesiredCapacity }}"
+        desired_capacity: "{{ target_asg.DesiredCapacity }}"
+        default_cooldown: "{{ target_asg.DefaultCooldown }}"
         termination_policies: "{{ termination_policies }}"
         wait_for_instances: no
